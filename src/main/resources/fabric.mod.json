@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "cobblemontest",
+  "version": "${version}",
+  "name": "CobblemonTest",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/cobblemontest/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "org.johnnymod.cobblemontest.client.CobblemontestDataGenerator"
+    ],
+    "client": [
+      "org.johnnymod.cobblemontest.client.CobblemontestClient"
+    ],
+    "main": [
+      "org.johnnymod.cobblemontest.Cobblemontest"
+    ]
+  },
+  "mixins": [
+    "cobblemontest.mixins.json",
+    {
+      "config": "cobblemontest.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
