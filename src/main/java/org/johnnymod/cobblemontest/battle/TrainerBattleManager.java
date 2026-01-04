@@ -5,7 +5,6 @@ import com.cobblemon.mod.common.api.battles.model.PokemonBattle;
 import com.cobblemon.mod.common.api.pokemon.PokemonProperties;
 import com.cobblemon.mod.common.battles.*;
 import com.cobblemon.mod.common.battles.actor.PlayerBattleActor;
-import com.cobblemon.mod.common.battles.actor.PokemonBattleActor;
 import com.cobblemon.mod.common.battles.pokemon.BattlePokemon;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
@@ -153,15 +152,14 @@ public class TrainerBattleManager {
                     playerTeam
             );
 
-            // Create battle Pokemon for trainer's Pokemon (not a clone, direct reference)
+            // Create battle Pokemon for trainer's Pokemon
             BattlePokemon trainerBattlePokemon = new BattlePokemon(trainerPokemon, trainerPokemon, entity -> kotlin.Unit.INSTANCE);
 
-            // Create the trainer's Pokemon battle actor with no flee distance
-            PokemonBattleActor trainerPokemonActor = new PokemonBattleActor(
-                    trainerPokemon.getUuid(),
-                    trainerBattlePokemon,
-                    -1.0f,  // Cannot flee
-                    new com.cobblemon.mod.common.battles.ai.RandomBattleAI()
+            // Create the trainer's battle actor (uses ActorType.NPC for proper trainer battle UI)
+            TrainerPokemonBattleActor trainerActor = new TrainerPokemonBattleActor(
+                    trainer.getUUID(),
+                    trainer.getTrainerName(),
+                    List.of(trainerBattlePokemon)
             );
 
             // Link the Pokemon entity to the battle
@@ -171,7 +169,7 @@ public class TrainerBattleManager {
             var result = BattleRegistry.startBattle(
                     BattleFormat.Companion.getGEN_9_SINGLES(),
                     new BattleSide(playerActor),
-                    new BattleSide(trainerPokemonActor),
+                    new BattleSide(trainerActor),
                     false  // canPreempt
             );
 
@@ -227,8 +225,11 @@ public class TrainerBattleManager {
         if (session != null) {
             trainer.setInBattle(false);
 
-            // The Pokemon entity is handled by Cobblemon's battle system
-            // (it will be removed if caught/fainted, or remain if battle ended otherwise)
+            // Clean up the trainer's Pokemon entity - remove it from the world
+            PokemonEntity pokemonEntity = session.getPokemonEntity();
+            if (pokemonEntity != null && pokemonEntity.isAlive()) {
+                pokemonEntity.discard();
+            }
 
             Cobblemontest.LOGGER.info("Battle ended between " + player.getName().getString() +
                     " and trainer " + trainer.getTrainerName());
