@@ -4,6 +4,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -14,13 +17,16 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import org.johnnymod.cobblemontest.battle.TrainerBattleManager;
 
 public class TrainerEntity extends PathfinderMob {
-    
-    private static final EntityDataAccessor<String> TRAINER_NAME = 
+
+    private static final EntityDataAccessor<String> TRAINER_NAME =
             SynchedEntityData.defineId(TrainerEntity.class, EntityDataSerializers.STRING);
-    private static final EntityDataAccessor<String> SKIN_ID = 
+    private static final EntityDataAccessor<String> SKIN_ID =
             SynchedEntityData.defineId(TrainerEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Boolean> IN_BATTLE =
+            SynchedEntityData.defineId(TrainerEntity.class, EntityDataSerializers.BOOLEAN);
 
     public TrainerEntity(EntityType<? extends PathfinderMob> entityType, Level world) {
         super(entityType, world);
@@ -37,6 +43,7 @@ public class TrainerEntity extends PathfinderMob {
         super.defineSynchedData(builder);
         builder.define(TRAINER_NAME, "Trainer");
         builder.define(SKIN_ID, "trainer1.png");
+        builder.define(IN_BATTLE, false);
     }
 
     @Override
@@ -48,10 +55,22 @@ public class TrainerEntity extends PathfinderMob {
     }
 
     @Override
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (!this.level().isClientSide && player instanceof ServerPlayer serverPlayer) {
+            // Only handle main hand interactions
+            if (hand == InteractionHand.MAIN_HAND) {
+                TrainerBattleManager.getInstance().startBattle(serverPlayer, this);
+            }
+        }
+        return InteractionResult.sidedSuccess(this.level().isClientSide);
+    }
+
+    @Override
     public void addAdditionalSaveData(CompoundTag nbt) {
         super.addAdditionalSaveData(nbt);
         nbt.putString("TrainerName", this.getTrainerName());
         nbt.putString("SkinId", this.getSkinId());
+        nbt.putBoolean("InBattle", this.isInBattle());
     }
 
     @Override
@@ -63,6 +82,17 @@ public class TrainerEntity extends PathfinderMob {
         if (nbt.contains("SkinId")) {
             this.setSkinId(nbt.getString("SkinId"));
         }
+        if (nbt.contains("InBattle")) {
+            this.setInBattle(nbt.getBoolean("InBattle"));
+        }
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        if (!this.level().isClientSide) {
+            TrainerBattleManager.getInstance().onTrainerRemoved(this);
+        }
+        super.remove(reason);
     }
 
     public String getTrainerName() {
@@ -81,5 +111,13 @@ public class TrainerEntity extends PathfinderMob {
 
     public void setSkinId(String skinId) {
         this.entityData.set(SKIN_ID, skinId);
+    }
+
+    public boolean isInBattle() {
+        return this.entityData.get(IN_BATTLE);
+    }
+
+    public void setInBattle(boolean inBattle) {
+        this.entityData.set(IN_BATTLE, inBattle);
     }
 }

@@ -15,7 +15,7 @@ public class ModEntities {
             EntityType.Builder.of(TrainerEntity::new, MobCategory.CREATURE)
                     .sized(0.6f, 1.8f)
                     .clientTrackingRange(10)
-                    .build(ResourceLocation.fromNamespaceAndPath("cobblemontest", "trainer"))
+                    .build(String.valueOf(ResourceLocation.fromNamespaceAndPath("cobblemontest", "trainer")))
     );
 
     public static void initialize() {

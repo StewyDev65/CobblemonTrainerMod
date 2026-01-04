@@ -1,4 +1,10 @@
 {
   "displayName": "Misty",
-  "skinId": "misty.png"
+  "skinId": "misty.png",
+  "pokemon": [
+    {
+      "species": "staryu",
+      "level": 18
+    }
+  ]
 }

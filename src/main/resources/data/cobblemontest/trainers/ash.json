@@ -1,4 +1,10 @@
 {
   "displayName": "Ash",
-  "skinId": "ash.png"
+  "skinId": "ash.png",
+  "pokemon": [
+    {
+      "species": "pikachu",
+      "level": 25
+    }
+  ]
 }

@@ -12,7 +12,7 @@ import org.johnnymod.cobblemontest.entity.TrainerEntity;
 public class TrainerEntityRenderer extends MobRenderer<TrainerEntity, PlayerModel<TrainerEntity>> {
     
     public TrainerEntityRenderer(EntityRendererProvider.Context context) {
-        super(context, new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER_SLIM), true), 0.5f);
+        super(context, new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), true), 0.5f);
     }
 
     @Override
