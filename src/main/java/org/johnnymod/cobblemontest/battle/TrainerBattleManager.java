@@ -81,19 +81,21 @@ public class TrainerBattleManager {
             return false;
         }
 
-        // Get the first Pokemon from the trainer's team for now (single Pokemon battle)
-        TrainerData.PokemonData firstPokemon = definition.getPokemon().get(0);
-
-        // Create the trainer's Pokemon
-        Pokemon trainerPokemon = createPokemonFromData(firstPokemon);
-        if (trainerPokemon == null) {
-            player.sendSystemMessage(Component.literal("Failed to create trainer's Pokemon!"));
-            Cobblemontest.LOGGER.error("Failed to create Pokemon for trainer: " + trainer.getTrainerName());
-            return false;
+        // Create all Pokemon for the trainer's team
+        List<Pokemon> trainerPokemonList = new ArrayList<>();
+        for (TrainerData.PokemonData pokemonData : definition.getPokemon()) {
+            Pokemon pokemon = createPokemonFromData(pokemonData);
+            if (pokemon == null) {
+                player.sendSystemMessage(Component.literal("Failed to create trainer's Pokemon!"));
+                Cobblemontest.LOGGER.error("Failed to create Pokemon " + pokemonData.getSpecies() +
+                        " for trainer: " + trainer.getTrainerName());
+                return false;
+            }
+            trainerPokemonList.add(pokemon);
         }
 
         // Start the battle - Cobblemon will handle Pokemon entity spawning with animations
-        return startTrainerBattle(player, trainer, trainerPokemon);
+        return startTrainerBattle(player, trainer, trainerPokemonList);
     }
 
     /**
@@ -122,7 +124,7 @@ public class TrainerBattleManager {
      * Starts a trainer battle between the player and the trainer's Pokemon.
      * Uses direct battle setup for proper trainer battle mechanics.
      */
-    private boolean startTrainerBattle(ServerPlayer player, TrainerEntity trainer, Pokemon trainerPokemon) {
+    private boolean startTrainerBattle(ServerPlayer player, TrainerEntity trainer, List<Pokemon> trainerPokemonList) {
         try {
             // Get player's party and create battle team
             var playerParty = Cobblemon.INSTANCE.getStorage().getParty(player);
@@ -134,23 +136,27 @@ public class TrainerBattleManager {
                     playerTeam
             );
 
-            // Create battle Pokemon for trainer's Pokemon with recall operation
-            BattlePokemon trainerBattlePokemon = new BattlePokemon(
-                    trainerPokemon,
-                    trainerPokemon,
-                    entity -> {
-                        // This gets called when the battle ends - recall the Pokemon with animation
-                        entity.recallWithAnimation();
-                        return kotlin.Unit.INSTANCE;
-                    }
-            );
+            // Create battle Pokemon for all of the trainer's Pokemon with recall operation
+            List<BattlePokemon> trainerBattlePokemonList = new ArrayList<>();
+            for (Pokemon pokemon : trainerPokemonList) {
+                BattlePokemon battlePokemon = new BattlePokemon(
+                        pokemon,
+                        pokemon,
+                        entity -> {
+                            // This gets called when the battle ends - recall the Pokemon with animation
+                            entity.recallWithAnimation();
+                            return kotlin.Unit.INSTANCE;
+                        }
+                );
+                trainerBattlePokemonList.add(battlePokemon);
+            }
 
             // Create the trainer's battle actor with entity backing for animations
             TrainerPokemonBattleActor trainerActor = new TrainerPokemonBattleActor(
                     trainer.getUUID(),
                     trainer.getTrainerName(),
                     trainer,  // Pass the trainer entity
-                    List.of(trainerBattlePokemon)
+                    trainerBattlePokemonList
             );
 
             // Note: Pokemon entity will be spawned automatically by Cobblemon with sendout animation
