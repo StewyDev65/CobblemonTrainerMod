@@ -5,6 +5,10 @@
     {
       "species": "geodude",
       "level": 12
+    },
+    {
+        "species": "mew",
+        "level": 30
     }
   ]
 }

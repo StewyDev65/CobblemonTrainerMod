@@ -92,25 +92,8 @@ public class TrainerBattleManager {
             return false;
         }
 
-        // Spawn the Pokemon entity next to the trainer
-        ServerLevel level = player.serverLevel();
-        Vec3 trainerPos = trainer.position();
-
-        // Calculate spawn position (2 blocks in front of trainer, facing the player)
-        Vec3 directionToPlayer = player.position().subtract(trainerPos).normalize();
-        Vec3 spawnPos = trainerPos.add(directionToPlayer.scale(2.0));
-
-        PokemonEntity pokemonEntity = new PokemonEntity(level, trainerPokemon, com.cobblemon.mod.common.CobblemonEntities.POKEMON);
-        pokemonEntity.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
-        level.addFreshEntity(pokemonEntity);
-
-        if (pokemonEntity == null) {
-            player.sendSystemMessage(Component.literal("Failed to spawn trainer's Pokemon!"));
-            return false;
-        }
-
-        // Start the battle using Cobblemon's PvP battle system
-        return startTrainerBattle(player, pokemonEntity, trainer, trainerPokemon);
+        // Start the battle - Cobblemon will handle Pokemon entity spawning with animations
+        return startTrainerBattle(player, trainer, trainerPokemon);
     }
 
     /**
@@ -139,8 +122,7 @@ public class TrainerBattleManager {
      * Starts a trainer battle between the player and the trainer's Pokemon.
      * Uses direct battle setup for proper trainer battle mechanics.
      */
-    private boolean startTrainerBattle(ServerPlayer player, PokemonEntity pokemonEntity,
-                                       TrainerEntity trainer, Pokemon trainerPokemon) {
+    private boolean startTrainerBattle(ServerPlayer player, TrainerEntity trainer, Pokemon trainerPokemon) {
         try {
             // Get player's party and create battle team
             var playerParty = Cobblemon.INSTANCE.getStorage().getParty(player);
@@ -152,18 +134,26 @@ public class TrainerBattleManager {
                     playerTeam
             );
 
-            // Create battle Pokemon for trainer's Pokemon
-            BattlePokemon trainerBattlePokemon = new BattlePokemon(trainerPokemon, trainerPokemon, entity -> kotlin.Unit.INSTANCE);
+            // Create battle Pokemon for trainer's Pokemon with recall operation
+            BattlePokemon trainerBattlePokemon = new BattlePokemon(
+                    trainerPokemon,
+                    trainerPokemon,
+                    entity -> {
+                        // This gets called when the battle ends - recall the Pokemon with animation
+                        entity.recallWithAnimation();
+                        return kotlin.Unit.INSTANCE;
+                    }
+            );
 
-            // Create the trainer's battle actor (uses ActorType.NPC for proper trainer battle UI)
+            // Create the trainer's battle actor with entity backing for animations
             TrainerPokemonBattleActor trainerActor = new TrainerPokemonBattleActor(
                     trainer.getUUID(),
                     trainer.getTrainerName(),
+                    trainer,  // Pass the trainer entity
                     List.of(trainerBattlePokemon)
             );
 
-            // Link the Pokemon entity to the battle
-            pokemonEntity.setBattleId(null); // Will be set by startBattle
+            // Note: Pokemon entity will be spawned automatically by Cobblemon with sendout animation
 
             // Start the battle using BattleRegistry directly
             var result = BattleRegistry.startBattle(
@@ -176,15 +166,11 @@ public class TrainerBattleManager {
             if (result instanceof SuccessfulBattleStart successResult) {
                 PokemonBattle battle = successResult.getBattle();
 
-                // Set the Pokemon entity's battle ID
-                pokemonEntity.setBattleId(battle.getBattleId());
-
                 // Create and track the battle session
                 TrainerBattleSession session = new TrainerBattleSession(
                         battle.getBattleId(),
                         trainer.getUUID(),
-                        player.getUUID(),
-                        pokemonEntity
+                        player.getUUID()
                 );
                 activeBattles.put(trainer.getUUID(), session);
 
@@ -203,14 +189,12 @@ public class TrainerBattleManager {
 
                 return true;
             } else {
-                // Battle failed to start - clean up
-                pokemonEntity.discard();
+                // Battle failed to start
                 player.sendSystemMessage(Component.literal("Failed to start battle!"));
                 return false;
             }
         } catch (Exception e) {
             Cobblemontest.LOGGER.error("Error starting trainer battle", e);
-            pokemonEntity.discard();
             return false;
         }
     }
@@ -225,11 +209,8 @@ public class TrainerBattleManager {
         if (session != null) {
             trainer.setInBattle(false);
 
-            // Clean up the trainer's Pokemon entity - remove it from the world
-            PokemonEntity pokemonEntity = session.getPokemonEntity();
-            if (pokemonEntity != null && pokemonEntity.isAlive()) {
-                pokemonEntity.discard();
-            }
+            // Pokemon cleanup is handled automatically by Cobblemon's battle system
+            // The recall animation will play automatically when the battle ends
 
             Cobblemontest.LOGGER.info("Battle ended between " + player.getName().getString() +
                     " and trainer " + trainer.getTrainerName());
@@ -258,10 +239,8 @@ public class TrainerBattleManager {
      * Cleans up any battles involving a trainer when they are removed.
      */
     public void onTrainerRemoved(TrainerEntity trainer) {
-        TrainerBattleSession session = activeBattles.remove(trainer.getUUID());
-        if (session != null && session.getPokemonEntity() != null) {
-            session.getPokemonEntity().discard();
-        }
+        // Just remove the battle session - Cobblemon handles entity cleanup
+        activeBattles.remove(trainer.getUUID());
     }
 
     /**
@@ -272,21 +251,17 @@ public class TrainerBattleManager {
         private final UUID battleId;
         private final UUID trainerUUID;
         private final UUID playerUUID;
-        private final PokemonEntity pokemonEntity;
         private int currentPokemonIndex = 0;
 
-        public TrainerBattleSession(UUID battleId, UUID trainerUUID, UUID playerUUID,
-                                    PokemonEntity pokemonEntity) {
+        public TrainerBattleSession(UUID battleId, UUID trainerUUID, UUID playerUUID) {
             this.battleId = battleId;
             this.trainerUUID = trainerUUID;
             this.playerUUID = playerUUID;
-            this.pokemonEntity = pokemonEntity;
         }
 
         public UUID getBattleId() { return battleId; }
         public UUID getTrainerUUID() { return trainerUUID; }
         public UUID getPlayerUUID() { return playerUUID; }
-        public PokemonEntity getPokemonEntity() { return pokemonEntity; }
         public int getCurrentPokemonIndex() { return currentPokemonIndex; }
         public void setCurrentPokemonIndex(int index) { this.currentPokemonIndex = index; }
     }
