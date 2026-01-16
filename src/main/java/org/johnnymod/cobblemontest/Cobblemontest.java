@@ -7,6 +7,7 @@ import net.minecraft.server.packs.PackType;
 import org.johnnymod.cobblemontest.command.TrainerSpawnCommand;
 import org.johnnymod.cobblemontest.data.TrainerData;
 import org.johnnymod.cobblemontest.entity.ModEntities;
+import org.johnnymod.cobblemontest.item.ModItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +22,9 @@ public class Cobblemontest implements ModInitializer {
 
         // Initialize entities
         ModEntities.initialize();
+
+        // Initialize items
+        ModItems.initialize();
 
         // Register commands
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
