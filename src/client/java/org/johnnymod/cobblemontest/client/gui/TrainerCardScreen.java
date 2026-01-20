@@ -2,7 +2,6 @@ package org.johnnymod.cobblemontest.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
@@ -14,13 +13,34 @@ public class TrainerCardScreen extends Screen {
 
     private static final ResourceLocation TEXTURE =
             ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/trainer_menu.png");
+    
+    // Button textures
+    private static final ResourceLocation BUTTON_STATS =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_stats.png");
+    private static final ResourceLocation BUTTON_FIGHT =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_fight.png");
+    private static final ResourceLocation BUTTON_GYMS =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_gyms.png");
+    private static final ResourceLocation BUTTON_SETTINGS =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_settings.png");
 
-    // Change these to match your actual texture dimensions
     private static final int TEXTURE_WIDTH = 225;
     private static final int TEXTURE_HEIGHT = 134;
+    
+    // Button texture dimensions
+    private static final int BUTTON_TEXTURE_WIDTH = 16;
+    private static final int BUTTON_TEXTURE_HEIGHT = 16;
+    
+    // Button scale
+    private static final float BUTTON_SCALE = 1.0f / 1.2f;
 
     private int leftPos;
     private int topPos;
+    
+    // Store button positions for text rendering
+    private int buttonX;
+    private int buttonStartY;
+    private int buttonSpacing;
 
     public TrainerCardScreen() {
         super(Component.literal("Trainer Card"));
@@ -34,28 +54,83 @@ public class TrainerCardScreen extends Screen {
         this.leftPos = (this.width - TEXTURE_WIDTH) / 2;
         this.topPos = (this.height - TEXTURE_HEIGHT) / 2;
 
-        // Add a test button
-        Button testButton = Button.builder(
-            Component.literal("Test"),
+        // Button positioning
+        this.buttonX = leftPos + 10;      // X position for all buttons
+        this.buttonStartY = topPos + 26;  // Starting Y position
+        this.buttonSpacing = 23;          // Spacing between buttons
+        
+        // Button 1 - Stats
+        CustomTextureButton statsButton = new CustomTextureButton(
+            buttonX,
+            buttonStartY,
+            16,
+            16,
+            BUTTON_STATS,
+            BUTTON_FIGHT,
+            BUTTON_TEXTURE_WIDTH,
+            BUTTON_TEXTURE_HEIGHT,
+            BUTTON_SCALE,
             button -> {
-                Cobblemontest.LOGGER.info("Button clicked!");
+                Cobblemontest.LOGGER.info("Stats button clicked!");
             }
-        )
-        .bounds(
-            leftPos + 10,   // x position
-            topPos + 20,    // y position
-            60,             // width
-            20              // height
-        )
-        .build();
-
-        this.addRenderableWidget(testButton);
+        );
+        this.addRenderableWidget(statsButton);
+        
+        // Button 2 - Fight
+        CustomTextureButton fightButton = new CustomTextureButton(
+            buttonX,
+            buttonStartY + buttonSpacing,
+            16,
+            16,
+            BUTTON_FIGHT,
+            BUTTON_STATS,
+            BUTTON_TEXTURE_WIDTH,
+            BUTTON_TEXTURE_HEIGHT,
+            BUTTON_SCALE,
+            button -> {
+                Cobblemontest.LOGGER.info("Fight button clicked!");
+            }
+        );
+        this.addRenderableWidget(fightButton);
+        
+        // Button 3 - Gyms
+        CustomTextureButton gymsButton = new CustomTextureButton(
+            buttonX,
+            buttonStartY + buttonSpacing * 2,
+            16,
+            16,
+            BUTTON_GYMS,
+            BUTTON_FIGHT,
+            BUTTON_TEXTURE_WIDTH,
+            BUTTON_TEXTURE_HEIGHT,
+            BUTTON_SCALE,
+            button -> {
+                Cobblemontest.LOGGER.info("Gyms button clicked!");
+            }
+        );
+        this.addRenderableWidget(gymsButton);
+        
+        // Button 4 - Settings
+        CustomTextureButton settingsButton = new CustomTextureButton(
+            buttonX,
+            buttonStartY + buttonSpacing * 3,
+            16,
+            16,
+            BUTTON_SETTINGS,
+            BUTTON_FIGHT,
+            BUTTON_TEXTURE_WIDTH,
+            BUTTON_TEXTURE_HEIGHT,
+            BUTTON_SCALE,
+            button -> {
+                Cobblemontest.LOGGER.info("Settings button clicked!");
+            }
+        );
+        this.addRenderableWidget(settingsButton);
     }
 
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        // Override to provide custom background rendering without blur
-        // Render dark overlay (optional - remove if you don't want it)
+        // Render dark overlay
         this.renderTransparentBackground(guiGraphics);
         
         // Render our custom GUI texture
@@ -78,13 +153,64 @@ public class TrainerCardScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        // Now we can safely call super.render() - it will use our custom renderBackground()
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+        
+        // Render button labels
+        renderButtonLabels(guiGraphics);
+    }
+    
+    private void renderButtonLabels(GuiGraphics guiGraphics) {
+        // Calculate text position (to the right of buttons)
+        // Button visual size is 16 * BUTTON_SCALE = ~13.3 pixels
+        int textX = buttonX + (int)(16 * BUTTON_SCALE) + 4; // 4 pixels padding after button
+        
+        // Text color (dark, dark green)
+        int textColor = 0x001a00;
+        
+        // Calculate vertical center offset for text alignment
+        // Font height is 8 pixels, button height is ~13.3, so offset by a few pixels
+        int textYOffset = 3;
+        
+        // Render each label
+        guiGraphics.drawString(
+            this.font,
+            "Stats",
+            textX,
+            buttonStartY + textYOffset,
+            textColor,
+            false  // no shadow
+        );
+        
+        guiGraphics.drawString(
+            this.font,
+            "Fight",
+            textX,
+            buttonStartY + buttonSpacing + textYOffset,
+            textColor,
+            false
+        );
+        
+        guiGraphics.drawString(
+            this.font,
+            "Gyms",
+            textX,
+            buttonStartY + buttonSpacing * 2 + textYOffset,
+            textColor,
+            false
+        );
+        
+        guiGraphics.drawString(
+            this.font,
+            "Settings",
+            textX,
+            buttonStartY + buttonSpacing * 3 + textYOffset,
+            textColor,
+            false
+        );
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // Close with ESC or inventory key (default 'E')
         if (keyCode == GLFW.GLFW_KEY_ESCAPE ||
                 this.minecraft.options.keyInventory.matches(keyCode, scanCode)) {
             this.onClose();
