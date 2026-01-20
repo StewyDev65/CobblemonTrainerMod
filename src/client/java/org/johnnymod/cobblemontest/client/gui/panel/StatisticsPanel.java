@@ -28,6 +28,7 @@ public class StatisticsPanel extends TrainerCardPanel {
         int headSize = 16;
         int padding = 8;
         int gap = 6; // Gap between head and name
+        int backgroundPadding = 4; // Extra padding around content
         
         // Calculate positions from right edge: [HEAD] [NAME]
         String playerName = minecraft.player.getName().getString();
@@ -41,11 +42,36 @@ public class StatisticsPanel extends TrainerCardPanel {
         // Center name vertically with head
         int nameY = headY + (headSize - minecraft.font.lineHeight) / 2;
         
+        // Calculate background bounds
+        int bgX = headX - backgroundPadding;
+        int bgY = headY - backgroundPadding;
+        int bgWidth = headSize + gap + nameWidth + (backgroundPadding * 2);
+        int bgHeight = headSize + (backgroundPadding * 2);
+        
+        // Render rounded rectangle background (dark semi-transparent)
+        renderRoundedRect(guiGraphics, bgX, bgY, bgWidth, bgHeight, 0x95000000); // 50% transparent black
+        
         // Render player head
         renderPlayerHead(guiGraphics, headX, headY, headSize);
         
         // Render player name to the right of head
-        guiGraphics.drawString(minecraft.font, playerName, nameX, nameY, 0x001A00, false);
+        guiGraphics.drawString(minecraft.font, playerName, nameX, nameY, 0xFFFFFF, false);
+    }
+
+    /**
+     * Renders a rectangle with 1-pixel rounded corners (pixelated fillet).
+     * @param guiGraphics The graphics context
+     * @param x Left edge
+     * @param y Top edge
+     * @param width Total width
+     * @param height Total height
+     * @param color ARGB color (with alpha support)
+     */
+    private void renderRoundedRect(GuiGraphics guiGraphics, int x, int y, int width, int height, int color) {
+        // Main center rectangle (full width and height minus corner pixels)
+        guiGraphics.fill(x + 1, y, x + width - 1, y + height, color); // Full middle section
+        guiGraphics.fill(x, y + 1, x + 1, y + height - 1, color);     // Left edge (without corners)
+        guiGraphics.fill(x + width - 1, y + 1, x + width, y + height - 1, color); // Right edge (without corners)
     }
     
     /**
