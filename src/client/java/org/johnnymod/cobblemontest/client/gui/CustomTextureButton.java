@@ -14,29 +14,31 @@ public class CustomTextureButton extends Button {
     private final int textureWidth;
     private final int textureHeight;
     private final float scale;
-    private final int originalWidth;  // Store the original unscaled width
-    private final int originalHeight; // Store the original unscaled height
+    private final int originalWidth;
+    private final int originalHeight;
     
     public CustomTextureButton(
             int x, 
             int y, 
             int width, 
             int height,
+            int clickableWidth,   // New parameter for extended clickable area
+            int clickableHeight,  // New parameter for extended clickable area
             ResourceLocation normalTexture,
             ResourceLocation hoverTexture,
             int textureWidth,
             int textureHeight,
             float scale,
             OnPress onPress) {
-        // The actual clickable area size (scaled)
-        super(x, y, (int)(width * scale), (int)(height * scale), Component.empty(), onPress, DEFAULT_NARRATION);
+        // Use clickable dimensions for the actual button bounds (what responds to clicks)
+        super(x, y, clickableWidth, clickableHeight, Component.empty(), onPress, DEFAULT_NARRATION);
         this.normalTexture = normalTexture;
         this.hoverTexture = hoverTexture;
         this.textureWidth = textureWidth;
         this.textureHeight = textureHeight;
         this.scale = scale;
-        this.originalWidth = width;   // Store original width
-        this.originalHeight = height; // Store original height
+        this.originalWidth = width;   // Store original visual width
+        this.originalHeight = height; // Store original visual height
     }
     
     @Override
@@ -58,15 +60,15 @@ public class CustomTextureButton extends Button {
         guiGraphics.pose().translate(this.getX(), this.getY(), 0);
         guiGraphics.pose().scale(scale, scale, 1.0F);
         
-        // Render the button texture using ORIGINAL dimensions (no rounding errors)
+        // Render the button texture using ORIGINAL dimensions (visual size stays the same)
         guiGraphics.blit(
             texture,
             0,
             0,
             0,
             0,
-            originalWidth,   // Use original width
-            originalHeight,  // Use original height
+            originalWidth,   // Use original width for visual
+            originalHeight,  // Use original height for visual
             textureWidth,
             textureHeight
         );

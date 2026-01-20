@@ -55,16 +55,21 @@ public class TrainerCardScreen extends Screen {
         this.topPos = (this.height - TEXTURE_HEIGHT) / 2;
 
         // Button positioning
-        this.buttonX = leftPos + 10;      // X position for all buttons
-        this.buttonStartY = topPos + 26;  // Starting Y position
-        this.buttonSpacing = 23;          // Spacing between buttons
+        this.buttonX = leftPos + 10;
+        this.buttonStartY = topPos + 26;
+        this.buttonSpacing = 23;
         
-        // Button 1 - Stats
+        // Calculate clickable area dimensions
+        int buttonVisualSize = (int)(16 * BUTTON_SCALE);  // ~13 pixels visual size
+        
+        // Button 1 - Stats (clickable area extends to cover "Stats" text)
         CustomTextureButton statsButton = new CustomTextureButton(
             buttonX,
             buttonStartY,
-            16,
-            16,
+            16,                  // Visual width
+            16,                  // Visual height
+            40,                  // Clickable width (adjust to cover text)
+            buttonVisualSize,    // Clickable height
             BUTTON_STATS,
             BUTTON_FIGHT,
             BUTTON_TEXTURE_WIDTH,
@@ -82,6 +87,8 @@ public class TrainerCardScreen extends Screen {
             buttonStartY + buttonSpacing,
             16,
             16,
+            40,                  // Clickable width
+            buttonVisualSize,
             BUTTON_FIGHT,
             BUTTON_STATS,
             BUTTON_TEXTURE_WIDTH,
@@ -99,6 +106,8 @@ public class TrainerCardScreen extends Screen {
             buttonStartY + buttonSpacing * 2,
             16,
             16,
+            40,                  // Clickable width
+            buttonVisualSize,
             BUTTON_GYMS,
             BUTTON_FIGHT,
             BUTTON_TEXTURE_WIDTH,
@@ -110,12 +119,14 @@ public class TrainerCardScreen extends Screen {
         );
         this.addRenderableWidget(gymsButton);
         
-        // Button 4 - Settings
+        // Button 4 - Settings (wider clickable area for longer text)
         CustomTextureButton settingsButton = new CustomTextureButton(
             buttonX,
             buttonStartY + buttonSpacing * 3,
             16,
             16,
+            55,                  // Clickable width (wider for "Settings")
+            buttonVisualSize,
             BUTTON_SETTINGS,
             BUTTON_FIGHT,
             BUTTON_TEXTURE_WIDTH,
@@ -161,14 +172,12 @@ public class TrainerCardScreen extends Screen {
     
     private void renderButtonLabels(GuiGraphics guiGraphics) {
         // Calculate text position (to the right of buttons)
-        // Button visual size is 16 * BUTTON_SCALE = ~13.3 pixels
-        int textX = buttonX + (int)(16 * BUTTON_SCALE) + 4; // 4 pixels padding after button
+        int textX = buttonX + (int)(16 * BUTTON_SCALE) + 4;
         
-        // Text color (dark, dark green)
-        int textColor = 0x001a00;
+        // Text color (white)
+        int textColor = 0x001A00;
         
-        // Calculate vertical center offset for text alignment
-        // Font height is 8 pixels, button height is ~13.3, so offset by a few pixels
+        // Vertical offset for text alignment
         int textYOffset = 3;
         
         // Render each label
@@ -178,7 +187,7 @@ public class TrainerCardScreen extends Screen {
             textX,
             buttonStartY + textYOffset,
             textColor,
-            false  // no shadow
+            false
         );
         
         guiGraphics.drawString(
