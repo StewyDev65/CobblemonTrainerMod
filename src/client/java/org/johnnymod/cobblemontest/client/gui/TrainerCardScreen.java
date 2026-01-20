@@ -8,6 +8,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.johnnymod.cobblemontest.Cobblemontest;
 import org.lwjgl.glfw.GLFW;
+import org.johnnymod.cobblemontest.client.gui.panel.TrainerCardPanel;
+import org.johnnymod.cobblemontest.client.gui.panel.StatisticsPanel;
 
 public class TrainerCardScreen extends Screen {
 
@@ -73,6 +75,16 @@ public class TrainerCardScreen extends Screen {
     private int buttonStartY;
     private int buttonSpacing;
 
+    // Button references (store as fields for panel switching)
+    private CustomTextureButton statsButton;
+    private CustomTextureButton fightButton;
+    private CustomTextureButton gymsButton;
+    private CustomTextureButton settingsButton;
+
+    // Panel system
+    private TrainerCardPanel currentPanel;
+    private StatisticsPanel statisticsPanel;
+
     private CustomTextureButton currentActiveButton;
 
     public TrainerCardScreen() {
@@ -95,8 +107,23 @@ public class TrainerCardScreen extends Screen {
         // Calculate clickable area dimensions
         int buttonVisualSize = (int)(16 * BUTTON_SCALE);  // ~13 pixels visual size
         
-        // Button 1 - Stats (clickable area extends to cover "Stats" text)
-        CustomTextureButton statsButton = new CustomTextureButton(
+        // Initialize panels first
+        int panelX = leftPos + 75;  // Start after button area
+        int panelY = topPos + 15;   // Small top padding
+        int panelWidth = TEXTURE_WIDTH - 85;  // Leave right padding
+        int panelHeight = TEXTURE_HEIGHT - 25; // Leave bottom padding
+
+        statisticsPanel = new StatisticsPanel(panelX, panelY, panelWidth, panelHeight);
+        // TODO: Initialize other panels as they're created
+        // fightPanel = new FightPanel(panelX, panelY, panelWidth, panelHeight);
+        // gymsPanel = new GymsPanel(panelX, panelY, panelWidth, panelHeight);
+        // settingsPanel = new SettingsPanel(panelX, panelY, panelWidth, panelHeight);
+
+        // Set default panel
+        currentPanel = statisticsPanel;
+
+        // Button 1 - Stats
+        statsButton = new CustomTextureButton(
             buttonX,
             buttonStartY,
             16,
@@ -104,21 +131,21 @@ public class TrainerCardScreen extends Screen {
             40,
             buttonVisualSize,
             BUTTON_STATS,
-            BUTTON_STATS_HOVER,  // Using same for hover (change if needed)
-            BUTTON_STATS_ACTIVE,        // NEW
-            BUTTON_STATS_ACTIVE_HOVER,  // NEW
+            BUTTON_STATS_HOVER,
+            BUTTON_STATS_ACTIVE,
+            BUTTON_STATS_ACTIVE_HOVER,
             BUTTON_TEXTURE_WIDTH,
             BUTTON_TEXTURE_HEIGHT,
             BUTTON_SCALE,
             button -> {
-                setActiveButton((CustomTextureButton) button);
+                setActiveButton((CustomTextureButton) button, statisticsPanel);
                 Cobblemontest.LOGGER.info("Stats button clicked!");
             }
         );
         this.addRenderableWidget(statsButton);
-        
+
         // Button 2 - Fight
-        CustomTextureButton fightButton = new CustomTextureButton(
+        fightButton = new CustomTextureButton(
             buttonX,
             buttonStartY + buttonSpacing,
             16,
@@ -127,20 +154,20 @@ public class TrainerCardScreen extends Screen {
             buttonVisualSize,
             BUTTON_FIGHT,
             BUTTON_FIGHT_HOVER,
-            BUTTON_FIGHT_ACTIVE,        // NEW
-            BUTTON_FIGHT_ACTIVE_HOVER,  // NEW
+            BUTTON_FIGHT_ACTIVE,
+            BUTTON_FIGHT_ACTIVE_HOVER,
             BUTTON_TEXTURE_WIDTH,
             BUTTON_TEXTURE_HEIGHT,
             BUTTON_SCALE,
             button -> {
-                setActiveButton((CustomTextureButton) button);
+                setActiveButton((CustomTextureButton) button, null); // TODO: pass fightPanel when created
                 Cobblemontest.LOGGER.info("Fight button clicked!");
             }
         );
         this.addRenderableWidget(fightButton);
-        
+
         // Button 3 - Gyms
-        CustomTextureButton gymsButton = new CustomTextureButton(
+        gymsButton = new CustomTextureButton(
             buttonX,
             buttonStartY + buttonSpacing * 2,
             16,
@@ -149,20 +176,20 @@ public class TrainerCardScreen extends Screen {
             buttonVisualSize,
             BUTTON_GYMS,
             BUTTON_GYMS_HOVER,
-            BUTTON_GYMS_ACTIVE,         // NEW
-            BUTTON_GYMS_ACTIVE_HOVER,   // NEW
+            BUTTON_GYMS_ACTIVE,
+            BUTTON_GYMS_ACTIVE_HOVER,
             BUTTON_TEXTURE_WIDTH,
             BUTTON_TEXTURE_HEIGHT,
             BUTTON_SCALE,
             button -> {
-                setActiveButton((CustomTextureButton) button);
+                setActiveButton((CustomTextureButton) button, null); // TODO: pass gymsPanel when created
                 Cobblemontest.LOGGER.info("Gyms button clicked!");
             }
         );
         this.addRenderableWidget(gymsButton);
-        
-        // Button 4 - Settings (wider clickable area for longer text)
-        CustomTextureButton settingsButton = new CustomTextureButton(
+
+        // Button 4 - Settings
+        settingsButton = new CustomTextureButton(
             buttonX,
             buttonStartY + buttonSpacing * 3,
             16,
@@ -171,20 +198,20 @@ public class TrainerCardScreen extends Screen {
             buttonVisualSize,
             BUTTON_SETTINGS,
             BUTTON_SETTINGS_HOVER,
-            BUTTON_SETTINGS_ACTIVE,        // NEW
-            BUTTON_SETTINGS_ACTIVE_HOVER,  // NEW
+            BUTTON_SETTINGS_ACTIVE,
+            BUTTON_SETTINGS_ACTIVE_HOVER,
             BUTTON_TEXTURE_WIDTH,
             BUTTON_TEXTURE_HEIGHT,
             BUTTON_SCALE,
             button -> {
-                setActiveButton((CustomTextureButton) button);
+                setActiveButton((CustomTextureButton) button, null); // TODO: pass settingsPanel when created
                 Cobblemontest.LOGGER.info("Settings button clicked!");
             }
         );
         this.addRenderableWidget(settingsButton);
 
         // Set Stats button as active by default
-        setActiveButton(statsButton);
+        setActiveButton(statsButton, statisticsPanel);
     }
 
     @Override
@@ -214,8 +241,21 @@ public class TrainerCardScreen extends Screen {
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         
-        // Render button labels
+        // Render current panel
+        if (currentPanel != null) {
+            currentPanel.render(guiGraphics, mouseX, mouseY, partialTick);
+        }
+        
+        // Render button labels (after panel so labels are on top)
         renderButtonLabels(guiGraphics);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (currentPanel != null) {
+            currentPanel.tick();
+        }
     }
     
     private void renderButtonLabels(GuiGraphics guiGraphics) {
@@ -282,14 +322,25 @@ public class TrainerCardScreen extends Screen {
         return false;
     }
 
-    private void setActiveButton(CustomTextureButton newActiveButton) {
-        // Deactivate the current active button
+    private void setActiveButton(CustomTextureButton newActiveButton, TrainerCardPanel newPanel) {
+        // Deactivate current panel
+        if (currentPanel != null) {
+            currentPanel.onDeactivate();
+        }
+        
+        // Deactivate current button
         if (currentActiveButton != null) {
             currentActiveButton.setActive(false);
         }
         
-        // Set the new active button
+        // Activate new button
         currentActiveButton = newActiveButton;
         currentActiveButton.setActive(true);
+        
+        // Switch to new panel
+        if (newPanel != null) {
+            currentPanel = newPanel;
+            currentPanel.onActivate();
+        }
     }
 }
