@@ -24,6 +24,37 @@ public class TrainerCardScreen extends Screen {
     private static final ResourceLocation BUTTON_SETTINGS =
             ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_settings.png");
 
+    // Button textures
+    private static final ResourceLocation BUTTON_STATS_HOVER =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_stats_hover.png");
+    private static final ResourceLocation BUTTON_FIGHT_HOVER =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_fight_hover.png");
+    private static final ResourceLocation BUTTON_GYMS_HOVER =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_gyms_hover.png");
+    private static final ResourceLocation BUTTON_SETTINGS_HOVER =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_settings_hover.png");
+
+    // Active button textures
+    private static final ResourceLocation BUTTON_STATS_ACTIVE =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_stats_active.png");
+    private static final ResourceLocation BUTTON_FIGHT_ACTIVE =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_fight_active.png");
+    private static final ResourceLocation BUTTON_GYMS_ACTIVE =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_gyms_active.png");
+    private static final ResourceLocation BUTTON_SETTINGS_ACTIVE =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_settings_active.png");
+
+    // Active hover button textures
+    private static final ResourceLocation BUTTON_STATS_ACTIVE_HOVER =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_stats_active_hover.png");
+    private static final ResourceLocation BUTTON_FIGHT_ACTIVE_HOVER =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_fight_active_hover.png");
+    private static final ResourceLocation BUTTON_GYMS_ACTIVE_HOVER =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_gyms_active_hover.png");
+    private static final ResourceLocation BUTTON_SETTINGS_ACTIVE_HOVER =
+            ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/button_settings_active_hover.png");
+
+
     private static final int TEXTURE_WIDTH = 225;
     private static final int TEXTURE_HEIGHT = 134;
     
@@ -41,6 +72,8 @@ public class TrainerCardScreen extends Screen {
     private int buttonX;
     private int buttonStartY;
     private int buttonSpacing;
+
+    private CustomTextureButton currentActiveButton;
 
     public TrainerCardScreen() {
         super(Component.literal("Trainer Card"));
@@ -66,16 +99,19 @@ public class TrainerCardScreen extends Screen {
         CustomTextureButton statsButton = new CustomTextureButton(
             buttonX,
             buttonStartY,
-            16,                  // Visual width
-            16,                  // Visual height
-            40,                  // Clickable width (adjust to cover text)
-            buttonVisualSize,    // Clickable height
+            16,
+            16,
+            40,
+            buttonVisualSize,
             BUTTON_STATS,
-            BUTTON_FIGHT,
+            BUTTON_STATS_HOVER,  // Using same for hover (change if needed)
+            BUTTON_STATS_ACTIVE,        // NEW
+            BUTTON_STATS_ACTIVE_HOVER,  // NEW
             BUTTON_TEXTURE_WIDTH,
             BUTTON_TEXTURE_HEIGHT,
             BUTTON_SCALE,
             button -> {
+                setActiveButton((CustomTextureButton) button);
                 Cobblemontest.LOGGER.info("Stats button clicked!");
             }
         );
@@ -87,14 +123,17 @@ public class TrainerCardScreen extends Screen {
             buttonStartY + buttonSpacing,
             16,
             16,
-            40,                  // Clickable width
+            40,
             buttonVisualSize,
             BUTTON_FIGHT,
-            BUTTON_STATS,
+            BUTTON_FIGHT_HOVER,
+            BUTTON_FIGHT_ACTIVE,        // NEW
+            BUTTON_FIGHT_ACTIVE_HOVER,  // NEW
             BUTTON_TEXTURE_WIDTH,
             BUTTON_TEXTURE_HEIGHT,
             BUTTON_SCALE,
             button -> {
+                setActiveButton((CustomTextureButton) button);
                 Cobblemontest.LOGGER.info("Fight button clicked!");
             }
         );
@@ -106,14 +145,17 @@ public class TrainerCardScreen extends Screen {
             buttonStartY + buttonSpacing * 2,
             16,
             16,
-            40,                  // Clickable width
+            40,
             buttonVisualSize,
             BUTTON_GYMS,
-            BUTTON_FIGHT,
+            BUTTON_GYMS_HOVER,
+            BUTTON_GYMS_ACTIVE,         // NEW
+            BUTTON_GYMS_ACTIVE_HOVER,   // NEW
             BUTTON_TEXTURE_WIDTH,
             BUTTON_TEXTURE_HEIGHT,
             BUTTON_SCALE,
             button -> {
+                setActiveButton((CustomTextureButton) button);
                 Cobblemontest.LOGGER.info("Gyms button clicked!");
             }
         );
@@ -125,18 +167,24 @@ public class TrainerCardScreen extends Screen {
             buttonStartY + buttonSpacing * 3,
             16,
             16,
-            55,                  // Clickable width (wider for "Settings")
+            55,
             buttonVisualSize,
             BUTTON_SETTINGS,
-            BUTTON_FIGHT,
+            BUTTON_SETTINGS_HOVER,
+            BUTTON_SETTINGS_ACTIVE,        // NEW
+            BUTTON_SETTINGS_ACTIVE_HOVER,  // NEW
             BUTTON_TEXTURE_WIDTH,
             BUTTON_TEXTURE_HEIGHT,
             BUTTON_SCALE,
             button -> {
+                setActiveButton((CustomTextureButton) button);
                 Cobblemontest.LOGGER.info("Settings button clicked!");
             }
         );
         this.addRenderableWidget(settingsButton);
+
+        // Set Stats button as active by default
+        setActiveButton(statsButton);
     }
 
     @Override
@@ -232,5 +280,16 @@ public class TrainerCardScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    private void setActiveButton(CustomTextureButton newActiveButton) {
+        // Deactivate the current active button
+        if (currentActiveButton != null) {
+            currentActiveButton.setActive(false);
+        }
+        
+        // Set the new active button
+        currentActiveButton = newActiveButton;
+        currentActiveButton.setActive(true);
     }
 }
