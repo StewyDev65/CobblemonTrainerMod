@@ -2,6 +2,7 @@ package org.johnnymod.cobblemontest.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
@@ -15,8 +16,8 @@ public class TrainerCardScreen extends Screen {
             ResourceLocation.fromNamespaceAndPath(Cobblemontest.MOD_ID, "textures/gui/trainer_menu.png");
 
     // Change these to match your actual texture dimensions
-    private static final int TEXTURE_WIDTH = 225;   // Change to your texture width
-    private static final int TEXTURE_HEIGHT = 134;  // Change to your texture height
+    private static final int TEXTURE_WIDTH = 225;
+    private static final int TEXTURE_HEIGHT = 134;
 
     private int leftPos;
     private int topPos;
@@ -32,33 +33,53 @@ public class TrainerCardScreen extends Screen {
         // Center the GUI on screen
         this.leftPos = (this.width - TEXTURE_WIDTH) / 2;
         this.topPos = (this.height - TEXTURE_HEIGHT) / 2;
+
+        // Add a test button
+        Button testButton = Button.builder(
+            Component.literal("Test"),
+            button -> {
+                Cobblemontest.LOGGER.info("Button clicked!");
+            }
+        )
+        .bounds(
+            leftPos + 10,   // x position
+            topPos + 20,    // y position
+            60,             // width
+            20              // height
+        )
+        .build();
+
+        this.addRenderableWidget(testButton);
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        // Override to provide custom background rendering without blur
+        // Render dark overlay (optional - remove if you don't want it)
+        this.renderTransparentBackground(guiGraphics);
+        
+        // Render our custom GUI texture
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, TEXTURE);
+
+        guiGraphics.blit(
+            TEXTURE,
+            leftPos,
+            topPos,
+            0,
+            0,
+            TEXTURE_WIDTH,
+            TEXTURE_HEIGHT,
+            TEXTURE_WIDTH,
+            TEXTURE_HEIGHT
+        );
     }
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        // Render dark background overlay
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-
-        // Ensure proper shader and texture are bound and no tinting is applied
-    RenderSystem.setShader(GameRenderer::getPositionTexShader);
-    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-    RenderSystem.setShaderTexture(0, TEXTURE);
-
-    // Draw the GUI texture - MUST use 8-parameter version for non-256x256 textures
-    guiGraphics.blit(
-        TEXTURE,
-        leftPos,                // x position on screen
-        topPos,                 // y position on screen
-        0,                      // u - texture X coordinate
-        0,                      // v - texture Y coordinate
-        TEXTURE_WIDTH,          // width to render on screen
-        TEXTURE_HEIGHT,         // height to render on screen
-        TEXTURE_WIDTH,          // actual texture file width (for UV calculation)
-        TEXTURE_HEIGHT          // actual texture file height (for UV calculation)
-    );
-
-        // Render children / tooltips - disabled for now as it was causing blur
-        // super.render(guiGraphics, mouseX, mouseY, partialTick);
+        // Now we can safely call super.render() - it will use our custom renderBackground()
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 
     @Override
@@ -75,7 +96,6 @@ public class TrainerCardScreen extends Screen {
 
     @Override
     public boolean isPauseScreen() {
-        // Don't pause the game when this screen is open
         return false;
     }
 }
