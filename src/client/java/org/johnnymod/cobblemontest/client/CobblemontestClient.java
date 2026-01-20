@@ -2,7 +2,6 @@ package org.johnnymod.cobblemontest.client;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.Minecraft;
 import net.minecraft.world.InteractionHand;
 import org.johnnymod.cobblemontest.Cobblemontest;
 import org.johnnymod.cobblemontest.client.gui.TrainerCardScreen;
