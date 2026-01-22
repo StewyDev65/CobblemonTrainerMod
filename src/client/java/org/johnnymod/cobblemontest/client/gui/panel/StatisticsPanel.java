@@ -26,7 +26,7 @@ public class StatisticsPanel extends TrainerCardPanel {
         
         // Head size and positioning
         int headSize = 16;
-        int padding = 8;
+        int padding = 10;
         int gap = 6; // Gap between head and name
         int backgroundPadding = 4; // Extra padding around content
         
@@ -34,7 +34,7 @@ public class StatisticsPanel extends TrainerCardPanel {
         String playerName = minecraft.player.getName().getString();
         int nameWidth = minecraft.font.width(playerName);
         
-        int rightEdge = x + width - padding;
+        int rightEdge = x + width - padding - 14;
         int nameX = rightEdge - nameWidth;
         int headX = nameX - gap - headSize;
         int headY = y + padding;
@@ -42,20 +42,32 @@ public class StatisticsPanel extends TrainerCardPanel {
         // Center name vertically with head
         int nameY = headY + (headSize - minecraft.font.lineHeight) / 2;
         
-        // Calculate background bounds
+        // Calculate first background bounds (name + head)
         int bgX = headX - backgroundPadding;
         int bgY = headY - backgroundPadding;
         int bgWidth = headSize + gap + nameWidth + (backgroundPadding * 2);
         int bgHeight = headSize + (backgroundPadding * 2);
         
         // Render rounded rectangle background (dark semi-transparent)
-        renderRoundedRect(guiGraphics, bgX, bgY, bgWidth, bgHeight, 0x95000000); // 50% transparent black
+        renderRoundedRect(guiGraphics, bgX, bgY, bgWidth, bgHeight, 0x80000000);
         
         // Render player head
         renderPlayerHead(guiGraphics, headX, headY, headSize);
         
         // Render player name to the right of head
         guiGraphics.drawString(minecraft.font, playerName, nameX, nameY, 0xFFFFFF, false);
+        
+        // Calculate second rectangle below the first
+        int verticalGap = 6; // Gap between the two rectangles
+        int secondRectWidth = bgWidth + 20; // 20 pixels wider than first rectangle
+        int secondRectHeight = (int)(secondRectWidth * 0.7f); // Height is 70% of width
+        
+        // Center horizontally with the first rectangle
+        int secondRectX = bgX - (secondRectWidth - bgWidth) / 2;
+        int secondRectY = bgY + bgHeight + verticalGap;
+        
+        // Render second rounded rectangle (grey semi-transparent)
+        renderRoundedRect(guiGraphics, secondRectX, secondRectY, secondRectWidth, secondRectHeight, 0x80404040);
     }
 
     /**
