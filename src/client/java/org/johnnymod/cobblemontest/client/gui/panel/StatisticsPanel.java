@@ -14,6 +14,16 @@ import net.minecraft.resources.ResourceLocation;
 public class StatisticsPanel extends TrainerCardPanel {
     
     private final Minecraft minecraft;
+
+    // Statistics data (placeholder values - will be replaced with real tracking later)
+    private int trainerBattlesFought = 0;
+    private int trainerBattlesWon = 0;
+    private int winPercent = 0;
+    private String currentGame = "None";
+    private String lastGym = "None";
+    private int avgLevel = 0;
+    private int pokemonSeen = 0;
+    private int pokemonCaught = 0;
     
     public StatisticsPanel(int x, int y, int width, int height) {
         super(x, y, width, height);
@@ -34,7 +44,7 @@ public class StatisticsPanel extends TrainerCardPanel {
         String playerName = minecraft.player.getName().getString();
         int nameWidth = minecraft.font.width(playerName);
         
-        int rightEdge = x + width - padding - 14;
+        int rightEdge = x + width - padding - 10; // Shift everything 10px left
         int nameX = rightEdge - nameWidth;
         int headX = nameX - gap - headSize;
         int headY = y + padding;
@@ -49,7 +59,7 @@ public class StatisticsPanel extends TrainerCardPanel {
         int bgHeight = headSize + (backgroundPadding * 2);
         
         // Render rounded rectangle background (dark semi-transparent)
-        renderRoundedRect(guiGraphics, bgX, bgY, bgWidth, bgHeight, 0x80000000);
+        renderRoundedRect(guiGraphics, bgX, bgY, bgWidth, bgHeight, 0xa6000000);
         
         // Render player head
         renderPlayerHead(guiGraphics, headX, headY, headSize);
@@ -67,7 +77,10 @@ public class StatisticsPanel extends TrainerCardPanel {
         int secondRectY = bgY + bgHeight + verticalGap;
         
         // Render second rounded rectangle (grey semi-transparent)
-        renderRoundedRect(guiGraphics, secondRectX, secondRectY, secondRectWidth, secondRectHeight, 0x80404040);
+        renderRoundedRect(guiGraphics, secondRectX, secondRectY, secondRectWidth, secondRectHeight, 0xa6000000);
+        
+        // Render statistics grid inside second rectangle
+        renderStatisticsGrid(guiGraphics, secondRectX, secondRectY, secondRectWidth, secondRectHeight);
     }
 
     /**
@@ -84,6 +97,79 @@ public class StatisticsPanel extends TrainerCardPanel {
         guiGraphics.fill(x + 1, y, x + width - 1, y + height, color); // Full middle section
         guiGraphics.fill(x, y + 1, x + 1, y + height - 1, color);     // Left edge (without corners)
         guiGraphics.fill(x + width - 1, y + 1, x + width, y + height - 1, color); // Right edge (without corners)
+    }
+
+    /**
+     * Renders the statistics grid in a 2-column, 4-row layout.
+     * Each stat has a label on top and value below, all centered.
+     */
+    private void renderStatisticsGrid(GuiGraphics guiGraphics, int rectX, int rectY, int rectWidth, int rectHeight) {
+        // Grid configuration
+        int cols = 2;
+        int rows = 4;
+        int cellWidth = rectWidth / cols;
+        int cellHeight = rectHeight / rows;
+        
+        // Text scale for fitting content
+        float textScale = 0.64f;
+        int textColor = 0xFFFFFF;
+        
+        // Define statistics data (label, value pairs)
+        String[][] stats = {
+            {"Battles", String.valueOf(trainerBattlesFought)},
+            {"Wins", String.valueOf(trainerBattlesWon)},
+            {"Win Rate", winPercent + "%"},
+            {"Current Game", currentGame},
+            {"Last Gym", lastGym},
+            {"Avg Lvl", String.valueOf(avgLevel)},
+            {"'Mon Seen", String.valueOf(pokemonSeen)},
+            {"'Mon Caught", String.valueOf(pokemonCaught)}
+        };
+        
+        // Render each stat
+        for (int i = 0; i < stats.length; i++) {
+            int col = i % cols;
+            int row = i / cols;
+            
+            String label = stats[i][0];
+            String value = stats[i][1];
+            
+            // Calculate cell position
+            int cellX = rectX + (col * cellWidth);
+            int cellY = rectY + (row * cellHeight);
+            
+            // Apply scaling
+            guiGraphics.pose().pushPose();
+            guiGraphics.pose().scale(textScale, textScale, 1.0f);
+            
+            // Calculate scaled positions (need to divide by scale since we're in scaled space)
+            float scaledCellX = cellX / textScale;
+            float scaledCellY = cellY / textScale;
+            float scaledCellWidth = cellWidth / textScale;
+            float scaledCellHeight = cellHeight / textScale;
+            
+            // Calculate label dimensions and center position
+            int labelWidth = minecraft.font.width(label);
+            int labelX = (int)(scaledCellX + (scaledCellWidth - labelWidth) / 2);
+            
+            // Calculate value dimensions and center position
+            int valueWidth = minecraft.font.width(value);
+            int valueX = (int)(scaledCellX + (scaledCellWidth - valueWidth) / 2);
+            
+            // Vertical positioning: label on top, value below, with small gap
+            int lineHeight = minecraft.font.lineHeight;
+            int totalHeight = lineHeight * 2 + 2; // 2 lines + 2px gap
+            int startY = (int)(scaledCellY + (scaledCellHeight - totalHeight) / 2 + 3);
+            
+            int labelY = startY;
+            int valueY = startY + lineHeight + 2; // 2px gap between label and value
+            
+            // Render label and value
+            guiGraphics.drawString(minecraft.font, label, labelX, labelY, textColor, false);
+            guiGraphics.drawString(minecraft.font, value, valueX, valueY, textColor, false);
+            
+            guiGraphics.pose().popPose();
+        }
     }
     
     /**
